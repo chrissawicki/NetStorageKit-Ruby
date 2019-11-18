@@ -107,7 +107,8 @@ module Akamai
             hash_ = OpenSSL::HMAC.digest("sha256", @key, message)
             acs_auth_sign = Base64.encode64(hash_).rstrip
 
-            uri = URI("http#{@ssl}://#{@hostname}#{path}")
+            uri = URI("http#{@ssl}://#{@hostname}")
+            uri.send(:set_path, path)
             headers = {
                 'X-Akamai-ACS-Action' => acs_action,
                 'X-Akamai-ACS-Auth-Data' => acs_auth_data,
