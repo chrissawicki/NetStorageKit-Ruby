@@ -79,7 +79,6 @@ module Akamai
             if kwargs[:action] == "upload"
                 begin
                     @request.body_stream = File.open(kwargs[:source])
-                        #@request.body = File.read(kwargs[:source])
                 rescue Exception => e
                     raise NetstorageError, e
                 end 
@@ -121,7 +120,7 @@ module Akamai
             if kwargs[:method] == "GET"
                 @request = Net::HTTP::Get.new(uri, initheader=headers)
             elsif kwargs[:method] == "POST" 
-                @request = Net::HTTP::Post.new(uri, initheader=headers)
+                @request = Net::HTTP::Post.new(uri, initheader=headers.merge('Transfer-Encoding' => 'chunked'))
             elsif kwargs[:method] == "PUT" # Use only upload
                 @request = Net::HTTP::Put.new(uri, initheader=headers)
             end
