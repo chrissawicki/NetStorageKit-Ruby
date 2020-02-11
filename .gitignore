@@ -39,3 +39,6 @@ build/
 .DS_Store
 /spike/
 spike/secrets.rb
+
+Gemfile.lock
+/.idea/

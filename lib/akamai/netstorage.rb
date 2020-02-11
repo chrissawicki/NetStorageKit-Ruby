@@ -78,7 +78,8 @@ module Akamai
 
             if kwargs[:action] == "upload"
                 begin
-                    @request.body = File.read(kwargs[:source])
+                    @request.body_stream = File.open(kwargs[:source])
+                        #@request.body = File.read(kwargs[:source])
                 rescue Exception => e
                     raise NetstorageError, e
                 end 
