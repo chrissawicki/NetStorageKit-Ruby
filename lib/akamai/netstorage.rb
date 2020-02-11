@@ -120,9 +120,9 @@ module Akamai
             if kwargs[:method] == "GET"
                 @request = Net::HTTP::Get.new(uri, initheader=headers)
             elsif kwargs[:method] == "POST" 
-                @request = Net::HTTP::Post.new(uri, initheader=headers.merge('Transfer-Encoding' => 'chunked'))
+                @request = Net::HTTP::Post.new(uri, initheader=headers)
             elsif kwargs[:method] == "PUT" # Use only upload
-                @request = Net::HTTP::Put.new(uri, initheader=headers)
+                @request = Net::HTTP::Put.new(uri, initheader=headers.merge('Transfer-Encoding' => 'chunked'))
             end
 
             response = _response(uri, kwargs)
