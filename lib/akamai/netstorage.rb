@@ -25,19 +25,21 @@ require "uri"
 
 
 module Akamai
-    class Chunked
-        def initialize(data, chunk_size)
-            @size = chunk_size
+    class ChunkReader
+        attr_accessor :on_read
+
+        def initialize(data)
             if data.respond_to? :read
                 @file = data
+                @bytes_requested = 0.0
+                @total_bytes = data.size
             end
         end
-          
-        def read(foo)
-            puts 'read'
-            if @file
-                @file.read(@size)
-            end
+
+        def read(size, buffer)
+            @bytes_requested += size
+            @on_read.call(@bytes_requested, @total_bytes) if @on_read
+            @file.read(size, buffer) if @file
         end
         
         def eof!
@@ -102,11 +104,13 @@ module Akamai
 
             if kwargs[:action] == "upload"
                 begin
-                    @request.body_stream = Chunked.new(File.open(kwargs[:source]), 1024)
+                    chunk_reader = ChunkReader.new(File.open(kwargs[:source]))
+                    chunk_reader.on_read = @upload_callback
+                    @request.body_stream = chunk_reader
                 rescue Exception => e
                     raise NetstorageError, e
                 end 
-            end 
+            end
             
             response = Net::HTTP.start(uri.hostname, uri.port, 
               :use_ssl => uri.scheme == 'https') { |http| 
@@ -233,7 +237,9 @@ module Akamai
                             path: ns_destination)
         end
 
-        def upload(local_source, ns_destination, index_zip=false)
+        def upload(local_source, ns_destination, &block)
+            @upload_callback = block
+
             if File.file?(local_source) 
                 if ns_destination.end_with?('/')
                     ns_destination = "#{ns_destination}#{File.basename(local_source)}"
@@ -242,6 +248,7 @@ module Akamai
                 raise NetstorageError, "[NetstorageError] #{ns_destination} doesn't exist or is directory"
             end
             action = "upload"
+            index_zip = false
             if index_zip == true or index_zip.to_s.downcase == "true"
                 action += "&index-zip=2"
             end
