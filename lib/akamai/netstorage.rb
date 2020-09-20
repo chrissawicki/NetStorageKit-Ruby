@@ -25,6 +25,30 @@ require "uri"
 
 
 module Akamai
+    class Chunked
+        def initialize(data, chunk_size)
+            @size = chunk_size
+            if data.respond_to? :read
+                @file = data
+            end
+        end
+          
+        def read(foo)
+            puts 'read'
+            if @file
+                @file.read(@size)
+            end
+        end
+        
+        def eof!
+            @file.eof!
+        end
+        
+        def eof?
+            @file.eof?
+        end
+    end
+
     class NetstorageError < Exception
         """Base-class for all exceptions raised by Netstorage Class"""
     end
@@ -78,7 +102,7 @@ module Akamai
 
             if kwargs[:action] == "upload"
                 begin
-                    @request.body_stream = File.open(kwargs[:source])
+                    @request.body_stream = Chunked.new(File.open(kwargs[:source]), 1024)
                 rescue Exception => e
                     raise NetstorageError, e
                 end 
